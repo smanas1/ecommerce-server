@@ -105,9 +105,9 @@ const is_live = false;
 //   }
 // };
 
-const capturePayment = async (req, res) => {
+const successPayment = async (req, res) => {
   try {
-    const { paymentId, payerId, orderId } = req.body;
+    const { orderId } = req.body;
 
     let order = await Order.findById(orderId);
 
@@ -120,8 +120,6 @@ const capturePayment = async (req, res) => {
 
     order.paymentStatus = "paid";
     order.orderStatus = "confirmed";
-    order.paymentId = paymentId;
-    order.payerId = payerId;
 
     for (let item of order.cartItems) {
       let product = await Product.findById(item.productId);
@@ -160,13 +158,28 @@ const capturePayment = async (req, res) => {
 const createOrder = async (req, res) => {
   const order = req.body;
 
+  const newlyCreatedOrder = new Order({
+    userId: order.userId,
+    cartId: order.cartId,
+    cartItems: order.cartItems,
+    addressInfo: order.addressInfo,
+    orderStatus: order.orderStatus,
+    paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    totalAmount: order.totalAmount,
+    orderDate: order.orderDate,
+    orderUpdateDate: order.orderUpdateDate,
+  });
+
+  await newlyCreatedOrder.save();
+
   const user = await User.findById(order.userId);
   console.log(user);
   const data = {
     total_amount: order.totalAmount,
     currency: "BDT",
     tran_id: tran_id, // use unique tran_id for each api call
-    success_url: "http://localhost:3030/success",
+    success_url: `http://localhost:5173/shop/success-payment/${newlyCreatedOrder._id}`,
     fail_url: "http://localhost:3030/fail",
     cancel_url: "http://localhost:3030/cancel",
     ipn_url: "http://localhost:3030/ipn",
@@ -198,27 +211,9 @@ const createOrder = async (req, res) => {
     .then(async (apiResponse) => {
       // Redirect the user to payment gateway
       let GatewayPageURL = apiResponse.GatewayPageURL;
-      res.send(GatewayPageURL);
-      const newlyCreatedOrder = new Order({
-        userId: order.userId,
-        cartId: order.cartId,
-        cartItems: order.cartItems,
-        addressInfo: order.addressInfo,
-        orderStatus: order.orderStatus,
-        paymentMethod: order.paymentMethod,
-        paymentStatus: order.paymentStatus,
-        totalAmount: order.totalAmount,
-        orderDate: order.orderDate,
-        orderUpdateDate: order.orderUpdateDate,
-        paymentId: order.paymentId,
-        payerId: order.payerId,
-      });
 
-      await newlyCreatedOrder.save();
-      console.log(apiResponse);
-    })
-    .then((res) => {
-      console.log(res);
+      res.send(GatewayPageURL);
+      console.log(newlyCreatedOrder);
     })
     .catch((err) => {
       console.log(err);
@@ -279,7 +274,7 @@ const getOrderDetails = async (req, res) => {
 
 module.exports = {
   createOrder,
-  // capturePayment,
+  successPayment,
   getAllOrdersByUser,
   getOrderDetails,
 };
