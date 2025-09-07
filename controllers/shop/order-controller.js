@@ -105,61 +105,59 @@ const is_live = false;
 //   }
 // };
 
-// const capturePayment = async (req, res) => {
-//   try {
-//     const { paymentId, payerId, orderId } = req.body;
+const capturePayment = async (req, res) => {
+  try {
+    const { paymentId, payerId, orderId } = req.body;
 
-//     let order = await Order.findById(orderId);
+    let order = await Order.findById(orderId);
 
-//     if (!order) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Order can not be found",
-//       });
-//     }
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order can not be found",
+      });
+    }
 
-//     order.paymentStatus = "paid";
-//     order.orderStatus = "confirmed";
-//     order.paymentId = paymentId;
-//     order.payerId = payerId;
+    order.paymentStatus = "paid";
+    order.orderStatus = "confirmed";
+    order.paymentId = paymentId;
+    order.payerId = payerId;
 
-//     for (let item of order.cartItems) {
-//       let product = await Product.findById(item.productId);
+    for (let item of order.cartItems) {
+      let product = await Product.findById(item.productId);
 
-//       if (!product) {
-//         return res.status(404).json({
-//           success: false,
-//           message: `Not enough stock for this product ${product.title}`,
-//         });
-//       }
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Not enough stock for this product ${product.title}`,
+        });
+      }
 
-//       product.totalStock -= item.quantity;
+      product.totalStock -= item.quantity;
 
-//       await product.save();
-//     }
+      await product.save();
+    }
 
-//     const getCartId = order.cartId;
-//     await Cart.findByIdAndDelete(getCartId);
+    const getCartId = order.cartId;
+    await Cart.findByIdAndDelete(getCartId);
 
-//     await order.save();
+    await order.save();
 
-//     res.status(200).json({
-//       success: true,
-//       message: "Order confirmed",
-//       data: order,
-//     });
-//   } catch (e) {
-//     console.log(e);
-//     res.status(500).json({
-//       success: false,
-//       message: "Some error occured!",
-//     });
-//   }
-// };
+    res.status(200).json({
+      success: true,
+      message: "Order confirmed",
+      data: order,
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occured!",
+    });
+  }
+};
 
 const createOrder = async (req, res) => {
-  // console.log(req.body);
-
   const order = req.body;
 
   const user = await User.findById(order.userId);
@@ -195,12 +193,36 @@ const createOrder = async (req, res) => {
     ship_country: "Bangladesh",
   };
   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
-  sslcz.init(data).then((apiResponse) => {
-    // Redirect the user to payment gateway
-    let GatewayPageURL = apiResponse.GatewayPageURL;
-    res.send(GatewayPageURL);
-    console.log(GatewayPageURL);
-  });
+  sslcz
+    .init(data)
+    .then(async (apiResponse) => {
+      // Redirect the user to payment gateway
+      let GatewayPageURL = apiResponse.GatewayPageURL;
+      res.send(GatewayPageURL);
+      const newlyCreatedOrder = new Order({
+        userId: order.userId,
+        cartId: order.cartId,
+        cartItems: order.cartItems,
+        addressInfo: order.addressInfo,
+        orderStatus: order.orderStatus,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        totalAmount: order.totalAmount,
+        orderDate: order.orderDate,
+        orderUpdateDate: order.orderUpdateDate,
+        paymentId: order.paymentId,
+        payerId: order.payerId,
+      });
+
+      await newlyCreatedOrder.save();
+      console.log(apiResponse);
+    })
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 const getAllOrdersByUser = async (req, res) => {
