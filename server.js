@@ -20,9 +20,7 @@ const commonFeatureRouter = require("./routes/common/feature-routes");
 //create a separate file for this and then import/use that file here
 
 mongoose
-  .connect(
-    "mongodb+srv://projects:project121@projects.ubggnuw.mongodb.net/ecommerce?retryWrites=true&w=majority&appName=Projects"
-  )
+  .connect(process.env.MONGODB_URL)
   .then(() => console.log("MongoDB connected"))
   .catch((error) => console.log(error));
 
@@ -31,7 +29,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
@@ -59,4 +57,6 @@ app.use("/api/shop/review", shopReviewRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
 
-app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server is now running on port ${process.env.PORT}`)
+);
