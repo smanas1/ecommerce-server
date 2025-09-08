@@ -107,9 +107,9 @@ const is_live = false;
 
 const successPayment = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { id } = req.params;
 
-    let order = await Order.findById(orderId);
+    let order = await Order.findById(id);
 
     if (!order) {
       return res.status(404).json({
@@ -141,11 +141,7 @@ const successPayment = async (req, res) => {
 
     await order.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Order confirmed",
-      data: order,
-    });
+    res.redirect("http://localhost:5173/shop/account");
   } catch (e) {
     console.log(e);
     res.status(500).json({
@@ -179,7 +175,7 @@ const createOrder = async (req, res) => {
     total_amount: order.totalAmount,
     currency: "BDT",
     tran_id: tran_id, // use unique tran_id for each api call
-    success_url: `http://localhost:5173/shop/success-payment/${newlyCreatedOrder._id}`,
+    success_url: `http://localhost:5000/api/shop/order/success/${newlyCreatedOrder._id}`,
     fail_url: "http://localhost:3030/fail",
     cancel_url: "http://localhost:3030/cancel",
     ipn_url: "http://localhost:3030/ipn",
@@ -212,8 +208,8 @@ const createOrder = async (req, res) => {
       // Redirect the user to payment gateway
       let GatewayPageURL = apiResponse.GatewayPageURL;
 
-      res.send(GatewayPageURL);
       console.log(newlyCreatedOrder);
+      res.send(GatewayPageURL);
     })
     .catch((err) => {
       console.log(err);
