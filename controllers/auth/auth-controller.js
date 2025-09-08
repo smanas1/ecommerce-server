@@ -68,16 +68,18 @@ const loginUser = async (req, res) => {
       { expiresIn: "3d" }
     );
 
-    res.cookie("token", token, { httpOnly: true, secure: true }).json({
-      success: true,
-      message: "Logged in successfully",
-      user: {
-        email: checkUser.email,
-        role: checkUser.role,
-        id: checkUser._id,
-        userName: checkUser.userName,
-      },
-    });
+    res
+      .cookie("token", token, { httpOnly: true, secure: true, sameSite: "lax" })
+      .json({
+        success: true,
+        message: "Logged in successfully",
+        user: {
+          email: checkUser.email,
+          role: checkUser.role,
+          id: checkUser._id,
+          userName: checkUser.userName,
+        },
+      });
   } catch (e) {
     console.log(e);
     res.status(500).json({
