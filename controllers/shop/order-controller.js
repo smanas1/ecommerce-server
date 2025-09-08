@@ -120,6 +120,7 @@ const successPayment = async (req, res) => {
 
     order.paymentStatus = "paid";
     order.orderStatus = "confirmed";
+    order.paymentURL = "";
 
     for (let item of order.cartItems) {
       let product = await Product.findById(item.productId);
@@ -135,6 +136,69 @@ const successPayment = async (req, res) => {
 
       await product.save();
     }
+
+    const getCartId = order.cartId;
+    await Cart.findByIdAndDelete(getCartId);
+
+    await order.save();
+
+    res.redirect("http://localhost:5173/shop/account");
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occured!",
+    });
+  }
+};
+
+const failPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order can not be found",
+      });
+    }
+
+    order.paymentStatus = "pending";
+    order.orderStatus = "pending";
+
+    const getCartId = order.cartId;
+    await Cart.findByIdAndDelete(getCartId);
+
+    await order.save();
+
+    res.redirect("http://localhost:5173/shop/account");
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occured!",
+    });
+  }
+};
+
+const cancelPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order can not be found",
+      });
+    }
+
+    order.paymentStatus = "cancelled";
+    order.orderStatus = "cancelled";
+    order.paymentURL = "";
 
     const getCartId = order.cartId;
     await Cart.findByIdAndDelete(getCartId);
@@ -176,8 +240,8 @@ const createOrder = async (req, res) => {
     currency: "BDT",
     tran_id: tran_id, // use unique tran_id for each api call
     success_url: `http://localhost:5000/api/shop/order/success/${newlyCreatedOrder._id}`,
-    fail_url: "http://localhost:3030/fail",
-    cancel_url: "http://localhost:3030/cancel",
+    fail_url: `http://localhost:5000/api/shop/order/fail/${newlyCreatedOrder._id}`,
+    cancel_url: `http://localhost:5000/api/shop/order/cancel/${newlyCreatedOrder._id}`,
     ipn_url: "http://localhost:3030/ipn",
     shipping_method: "Courier",
     product_name: "Computer.",
@@ -208,7 +272,8 @@ const createOrder = async (req, res) => {
       // Redirect the user to payment gateway
       let GatewayPageURL = apiResponse.GatewayPageURL;
 
-      console.log(newlyCreatedOrder);
+      newlyCreatedOrder.paymentURL = GatewayPageURL;
+      await newlyCreatedOrder.save();
       res.send(GatewayPageURL);
     })
     .catch((err) => {
@@ -273,4 +338,6 @@ module.exports = {
   successPayment,
   getAllOrdersByUser,
   getOrderDetails,
+  failPayment,
+  cancelPayment,
 };
