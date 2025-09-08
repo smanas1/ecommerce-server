@@ -151,9 +151,9 @@ const createOrder = async (req, res) => {
     total_amount: order.totalAmount,
     currency: "BDT",
     tran_id: tran_id, // use unique tran_id for each api call
-    success_url: `http://localhost:5000/api/shop/order/success/${newlyCreatedOrder._id}`,
-    fail_url: `http://localhost:5000/api/shop/order/fail/${newlyCreatedOrder._id}`,
-    cancel_url: `http://localhost:5000/api/shop/order/cancel/${newlyCreatedOrder._id}`,
+    success_url: `${process.env.FRONTEND_URL}/api/shop/order/success/${newlyCreatedOrder._id}`,
+    fail_url: `${process.env.FRONTEND_URL}/api/shop/order/fail/${newlyCreatedOrder._id}`,
+    cancel_url: `${process.env.FRONTEND_URL}/api/shop/order/cancel/${newlyCreatedOrder._id}`,
     ipn_url: "http://localhost:3030/ipn",
     shipping_method: "Courier",
     product_name: "Computer.",
