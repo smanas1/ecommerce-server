@@ -151,9 +151,9 @@ const createOrder = async (req, res) => {
     total_amount: order.totalAmount,
     currency: "BDT",
     tran_id: tran_id, // use unique tran_id for each api call
-    success_url: `${process.env.FRONTEND_URL}/api/shop/order/success/${newlyCreatedOrder._id}`,
-    fail_url: `${process.env.FRONTEND_URL}/api/shop/order/fail/${newlyCreatedOrder._id}`,
-    cancel_url: `${process.env.FRONTEND_URL}/api/shop/order/cancel/${newlyCreatedOrder._id}`,
+    success_url: `${process.env.BACKEND_URL}/api/shop/order/success/${newlyCreatedOrder._id}`,
+    fail_url: `${process.env.BACKEND_URL}/api/shop/order/fail/${newlyCreatedOrder._id}`,
+    cancel_url: `${process.env.BACKEND_URL}/api/shop/order/cancel/${newlyCreatedOrder._id}`,
     ipn_url: "http://localhost:3030/ipn",
     shipping_method: "Courier",
     product_name: "Computer.",
@@ -197,7 +197,7 @@ const getAllOrdersByUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const orders = await Order.find({ userId });
+    const orders = await Order.find({ userId }).sort({ orderDate: -1 });
 
     if (!orders.length) {
       return res.status(404).json({
@@ -223,7 +223,7 @@ const getOrderDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).sort({ orderDate: -1 });
 
     if (!order) {
       return res.status(404).json({
