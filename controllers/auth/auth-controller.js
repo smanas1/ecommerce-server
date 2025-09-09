@@ -68,11 +68,15 @@ const loginUser = async (req, res) => {
       { expiresIn: "3d" }
     );
 
+    // Check if the request is made over HTTPS
+    const isProduction = process.env.NODE_ENV === "production";
+    const isSecure = isProduction || req.secure || req.headers['x-forwarded-proto'] === 'https';
+
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
+        secure: isSecure, // Only set secure flag in production or when actually using HTTPS
+        sameSite: isSecure ? "None" : "Lax", // Use "None" for cross-site requests in production, "Lax" for local development
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({
