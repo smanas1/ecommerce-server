@@ -10,11 +10,16 @@ cloudinary.config({
 const storage = new multer.memoryStorage();
 
 async function imageUploadUtil(file) {
-  const result = await cloudinary.uploader.upload(file, {
-    resource_type: "auto",
-  });
+  try {
+    const result = await cloudinary.uploader.upload(file, {
+      resource_type: "auto",
+    });
 
-  return result;
+    return result;
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    throw new Error("Failed to upload image to Cloudinary: " + error.message);
+  }
 }
 
 const upload = multer({ storage });
