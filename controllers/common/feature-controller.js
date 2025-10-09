@@ -1,4 +1,5 @@
 const Feature = require("../../models/Feature");
+const cloudinary = require("cloudinary").v2;
 
 const addFeatureImage = async (req, res) => {
   try {
@@ -42,4 +43,26 @@ const getFeatureImages = async (req, res) => {
   }
 };
 
-module.exports = { addFeatureImage, getFeatureImages };
+const deleteFeatureImage = async (req, res) => {
+  try {
+    const parts = req.body.image.split("/");
+    const publicIdWithExtension = parts[parts.length - 1];
+    const publicId = publicIdWithExtension.split(".")[0];
+
+    await cloudinary.uploader.destroy(publicId);
+    await Feature.findByIdAndDelete(req.body._id);
+
+    res.status(200).json({
+      success: true,
+      message: "Image is deleted",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Image not deleted!",
+    });
+  }
+};
+
+module.exports = { addFeatureImage, getFeatureImages, deleteFeatureImage };
