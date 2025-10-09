@@ -51,7 +51,7 @@ const successPayment = async (req, res) => {
     await order.save();
 
     res.redirect(
-      `${process.env.FRONTEND_URL}/shop/success-payment?orderId=${order._id}&status=confirmed&amount=${order.totalAmount}`
+      `${process.env.FRONTEND_URL}/success-payment?orderId=${order._id}&status=confirmed&amount=${order.totalAmount}`
     );
   } catch (e) {
     console.log(e);
@@ -84,7 +84,7 @@ const failPayment = async (req, res) => {
     await order.save();
 
     res.redirect(
-      `${process.env.FRONTEND_URL}/shop/failed-payment?orderId=${order._id}&status=pending&amount=${order.totalAmount}`
+      `${process.env.FRONTEND_URL}/failed-payment?orderId=${order._id}&status=pending&amount=${order.totalAmount}`
     );
   } catch (e) {
     console.log(e);
